@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+
+
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DuckLess</title>
@@ -206,7 +208,9 @@ body{font-size:22px}
 @keyframes fshtx{0%,30%{opacity:0}45%,100%{opacity:1}}
 #sStage{height:180px;padding:0;align-items:center;justify-content:center}#sStage::after{display:none}
 #wc{image-rendering:auto}
-</style></head>
+</style><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script></head>
 <body>
 <div id="boot"><h1 class="logo">DuckLess</h1><div id="bootDuck"></div><div class="gr" id="gr"></div><p id="bootTxt" style="margin:0;color:#ffd">Picking grapes...</p><button class="btn go big blink hidden" id="bootGo" style="max-width:300px">Tap to start</button><div class="wave"></div></div>
 <canvas id="fx"></canvas><canvas id="amb"></canvas><div id="evb" class="hidden"></div><div id="cr" class="hidden"></div>
@@ -378,7 +382,23 @@ const TC=225;
 const D={coins:0,feathers:0,bg:"",bgs:[],best:0,skin:"duck",hat:"",skins:["duck"],hats:[],modes:["classic"],mode:"classic",sound:true,name:"",traitor:false,seen:"",frenzy:0,gid:""};
 let S=Object.assign({},D);try{Object.assign(S,JSON.parse(localStorage.getItem("duckless3")||"{}"))}catch(e){}
 if(!S.gid)S.gid="g"+Math.random().toString(36).slice(2,9);
-const lc=n=>n.toLowerCase();
+const firebaseConfig = {
+  apiKey: "AIzaSyDCwIW2H5TPogHisqDb_qtxr9lbbwll1Jg",
+  authDomain: "duckless-f2d3c.firebaseapp.com",
+  projectId: "duckless-f2d3c",
+  storageBucket: "duckless-f2d3c.firebasestorage.app",
+  messagingSenderId: "199055144793",
+  appId: "1:199055144793:web:435d49139434ab737afe48",
+  measurementId: "G-0T63FNNPMG"
+};
+  appId: "1:199055144793:web:435d49139434ab737afe48",
+ 
+
+
+firebase.initializeApp(firebaseConfig);
+db = firebase.firestore();
+  measurementId: "G-0T63FNNPMG"
+;const lc=n=>n.toLowerCase();
 let ADMIN=false,db=null,G=null,P=null,tab="skins",sv=null,ac=null,mus=null,pv=null,raf=0,EV={until:0,m:2,frenzy:0},cs="beach",unIn=null,doneIn={},PL={doc:null,votes:[],dis:(()=>{try{return localStorage.getItem("dl_pdis")||""}catch(e){return""}})()};
 if(lc(S.name||"")==="rivex")S=Object.assign({},D,{sound:S.sound,gid:S.gid});
 const isOwnerNow=()=>ADMIN&&lc(S.name||"")==="rivex";
@@ -445,7 +465,22 @@ function renderGate(){const a=$("#gAcct");
   try{const r=db.doc("accounts/"+k),x=await r.get();if(x.exists){$("#aErr").textContent="That name is taken. Try another.";return}
   await r.set({name:v[0],h:await hash(...v)});S.name=v[0];save();subInbox();toast("Account made");show("home")}catch(e){$("#aErr").textContent="Could not save. Try again."}};
  $("#li").onclick=async()=>{const v=val();if(!v)return;const k=lc(v[0]),h=await hash(...v);
-  if(k==="rivex"){if(h!==RH){$("#aErr").textContent="Wrong name or password";return}ADMIN=true;let pd={};try{if(db){const p=await db.doc("profiles/rivex").get();if(p.exists)pd=p.data()}}catch(e){}
+  if(k==="rivex"){if(h!==RH){$("#aErr").textContent="Wrong name or password";return}try {
+  const result = await firebase.auth().signInWithPopup(
+    new firebase.auth.GoogleAuthProvider()
+  );
+
+  if ((result.user.email || "").toLowerCase() !== "luckyhollister12@gmail.com") {
+    await firebase.auth().signOut();
+    await firebase.auth().signInAnonymously();
+    $("#aErr").textContent = "Wrong Google account.";
+    return;
+  }
+} catch (e) {
+  $("#aErr").textContent = "Google login failed: " + e.message;
+  return;
+}
+ADMIN=true;;let pd={};try{if(db){const p=await db.doc("profiles/rivex").get();if(p.exists)pd=p.data()}}catch(e){}
    S=Object.assign({},D,pd,{name:"Rivex",sound:S.sound,gid:S.gid});applyOwner();watchPoll();subInbox();watchPres();toast("Welcome back Rivex");show("home");return}
   if(!db){$("#aErr").textContent="Accounts need the claude.ai viewer.";return}
   try{const x=await db.doc("accounts/"+k).get();if(!x.exists||x.data().h!==h){$("#aErr").textContent="Wrong name or password";return}
